@@ -44,11 +44,7 @@ class ServerStatus
 		{
 			$this->url = $url;
 			$this->url['status'] = $this->check();
-			// if ( ! empty( $title ) )
-			// 	$this->url['title'] = $title;
-			// else
-			// 	$this->url['title'] = $this->getTitle( $this->url['full_url'] );
-			session_start();
+			$this->url['title'] = $this->getTitle( $this->url['full_url'] );
 		}
 	} // End of __construct
 	
@@ -63,14 +59,6 @@ class ServerStatus
 	public function __destruct()
 	{
 		foo( $this->url ); // DEBUG <-
-		
-		foreach ( $_SESSION as $key => $value )
-		{
-			foo($value, $key); // DEBUG <-
-		}
-		
-		fo(isset( $_SESSION[$this->url['safe_domain'] . '_last_status_check'] )); // DEBUG <-
-		
 	} // End of public function __destruct
 	
 // ------------------------------------------------------------------------
@@ -107,19 +95,7 @@ class ServerStatus
 		if ( ( ! is_int( $port ) && $port < 0 ) || ( ! is_int( $timeout ) && $timeout < 1 ) )
 			return false;
 		
-		if ( isset( $_SESSION[$this->url['safe_domain'] . '_last_status_check'] ) && ( time() - $_SESSION[$this->url['safe_domain'] . '_last_status_check'] ) < $_SESSION[$this->url['safe_domain'] . '__min_check_interval'] )
-			return $_SESSION[$this->url['safe_domain'] . '_status'];
-		
-		$_SESSION[$this->url['safe_domain'] . '_last_status_check'] = time();
-		$_SESSION[$this->url['safe_domain'] . '_min_check_interval'] = $_min_check_interval;
-		
-		$this->status = ( bool ) @fsockopen( $this->url['safe_domain'],  $port, $errno, $errstr, $timeout );
-		$_SESSION[$this->url['safe_domain'] . '_status'] = $this->status;
-		
-		fo($_SESSION[$this->url['safe_domain'] . '_status'], 'lala'); // DEBUG <-
-		
-		fo($this->status); // DEBUG <-
-		
+		$this->status = ( bool ) @fsockopen( $this->url['full_domain'],  $port, $errno, $errstr, $timeout );
 		return $this->status;
 	} // End of public function check
 	
@@ -200,11 +176,7 @@ class ServerStatus
 	 */
 	public function getTitle( $url )
 	{
-		if ( isset( $_SESSION[$this->url['safe_domain'] . '_last_title_check'] ) && ( time() - $_SESSION[$this->url['safe_domain'] . '_last_title_check'] ) < $_SESSION[$this->url['safe_domain'] . '_min_check_interval'] )
-		{
-			return $_SESSION[$this->url['safe_domain'] . '_title'];
-		}
-		elseif ( isset( $this->url['title'] ) )
+		if ( isset( $this->url['title'] ) )
 		{
 			return $this->url['title'];
 		}
@@ -224,9 +196,6 @@ class ServerStatus
 			$len   = strpos( $str2, '</title>' ) - $start;
 			
 			$title = substr( $str, $start, $len );
-			
-			$_SESSION[$this->url['safe_domain'] . '_last_title_check'] = time();
-			$_SESSION[$this->url['safe_domain'] . '_title'] = $title;
 			
 			return $title;
 		}
