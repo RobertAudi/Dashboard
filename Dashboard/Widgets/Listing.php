@@ -1,4 +1,4 @@
-<?php if ( ! defined( 'APPPATH' ) ) exit( 'Direct access to the individual scripts is not allowed!' );
+<?php if (! defined('APPPATH')) exit('Direct access to the individual scripts is not allowed!');
 
 /**
 * Listing Widget
@@ -55,6 +55,14 @@ class Listing
 	private $folder;
 	
 	/**
+	 * The url representation of the folder.
+	 *
+	 * @access private
+	 * @var string
+	 */
+	private $url;
+	
+	/**
 	 * The list of files.
 	 *
 	 * @access private
@@ -75,21 +83,22 @@ class Listing
 	 * @access public
 	 * @param string $folder : The folder which files will be listed.
 	 */
-	public function __construct( $folder )
+	public function __construct($folder)
 	{
-		if ( ( $folder = $this->setup_folder( $folder ) ) === false )
+		if (($folder = $this->setup_folder($folder)) === false)
 		{
 			exit;
 		}
 		else
 		{
-			$this->folder = $folder;
+			$this->folder = $folder['path'];
+			$this->url = $folder['url'];
 			$this->files = array();
 			
 			$this->valid_sort_type = array(
-				'lastmodified' => array( $this, 'compare_file_modification_date' ), // <- line 44
+				'lastmodified' => array($this, 'compare_file_modification_date'), // <- line 44
 				'alphabetical' => 'strnatcasecmp',
-				'size' => array( $this, 'compare_file_size' )
+				'size' => array($this, 'compare_file_size')
 			);
 		}
 	} // End of __construct
@@ -105,39 +114,41 @@ class Listing
 	 * @return bool|array : List of files. False on error.
 	 * @author Aziz Light
 	 */
-	public function getFiles( $num = 0, $order = 'lastmodified', $new_list = true )
+	public function getFiles($num = 0, $order = 'lastmodified', $new_list = true)
 	{
 		// What the fuck does return false mean?
 		// FIXME: throw an exception, or log an error message or something...
-		if ( ! is_int( $num ) || ! is_bool( $new_list ) )
+		if (! is_int($num) || ! is_bool($new_list))
 			return false;
 		
-		if ( $new_list === false && isset( $this->files ) && count( $this->files >= $num ) )
-			return array_slice( $this->files, 0, $num );
+		if ($new_list === false && isset($this->files) && count($this->files >= $num))
+			return array_slice($this->files, 0, $num);
 		
-		if ( $handle = opendir( $this->folder ) )
+		if ($handle = opendir($this->folder))
 		{
-			while ( ( $file = readdir( $handle ) ) !== false )
+			while (($file = readdir($handle)) !== false)
 			{
-				if ( ! in_array( $file, self::$excluded_files ) && ! is_dir( $this->folder . $file ) )
+				if (! in_array($file, self::$excluded_files) && ! is_dir($this->folder . $file))
 				{
 					$this->files[$file] = array(
 						'filename'          => $file,
-						'filepath'          => $this->folder,
-						'fullpath'          => $this->folder . $file,
-						'modification_date' => DashboardHelpers::timespan( filemtime( $this->folder . $file ) ),
-						'size'              => DashboardHelpers::formatSize( filesize( $this->folder . $file ) ),
+						'path'          => $this->folder . $file,
+						'folderpath'          => $this->folder,
+						'url' => $this->url . $file,
+						'folderurl' => $this->url,
+						'modification_date' => DashboardHelpers::timespan(filemtime($this->folder . $file)),
+						'size'              => DashboardHelpers::formatSize(filesize($this->folder . $file)),
 					);
 				}
 			}
-			closedir( $handle );
+			closedir($handle);
 		}
 		
-		if ( ! $this->order_files( $order ) )
+		if (! $this->order_files($order))
 		{
 			// TODO: Do something to notify the user that the sort operation failed.
 		}
-		return array_slice( $this->files, 0, $num );
+		return array_slice($this->files, 0, $num);
 	} // End of public function getFiles
 	
 // ------------------------------------------------------------------------
@@ -151,22 +162,29 @@ class Listing
 	 * @return bool|string : The edited folder path. False on error.
 	 * @author Aziz Light
 	 */
-	private function setup_folder( $folder )
+	private function setup_folder($folder)
 	{
-		if ( ! is_string( $folder ) )
+		if (! is_string($folder))
 			return false;
 		
 		// Add a trailing slash if there isn't one.
-		if ( substr( $folder, -1 ) != self::$directory_seperator )
+		if (substr($folder, -1) != self::$directory_seperator)
 			$folder .= self::$directory_seperator;
 		
 		// If the folder path is absolute or relative to the current location, don't touch it.
 		// Else, make it relative to the server root.
-		if ( substr( $folder, 0, 1 ) != self::$directory_seperator && substr( $folder, 0, 2 ) != '.' . self::$directory_seperator )
+		if (substr($folder, 0, 1) != self::$directory_seperator && substr($folder, 0, 2) != '.' . self::$directory_seperator)
 			$folder = $_SERVER['DOCUMENT_ROOT'] . self::$directory_seperator . $folder;
 		
-		if ( is_dir( $folder ) )
-			return $folder;
+		$url = (substr($folder, 0, 18) == $_SERVER['DOCUMENT_ROOT'] . self::$directory_seperator)
+			? BASEURL . substr_replace($folder, '', 0, 18)
+			: 'file://' . $folder;
+		
+		if (is_dir($folder))
+			return array(
+				'path' => $folder,
+				'url' => $url,
+			);
 		
 		return false;
 	} // End of private function setup_folder
@@ -182,15 +200,15 @@ class Listing
 	 * @return bool : Boolean relative to the success of the operation.
 	 * @author Aziz Light
 	 */
-	private function order_files( $sort_type = 'lastmodified', $reverse_order = false )
+	private function order_files($sort_type = 'lastmodified', $reverse_order = false)
 	{
-		if ( ! array_key_exists( $sort_type, $this->valid_sort_type ) )
+		if (! array_key_exists($sort_type, $this->valid_sort_type))
 			return false;
 		
-		if ( uksort( $this->files, $this->valid_sort_type[$sort_type] ) )
+		if (uksort($this->files, $this->valid_sort_type[$sort_type]))
 		{
-			if ( $reverse_order === true )
-				$this->files = array_reverse( $this->files );
+			if ($reverse_order === true)
+				$this->files = array_reverse($this->files);
 			return true;
 		}
 		else
@@ -208,14 +226,14 @@ class Listing
 	 * @access private
 	 * @author Aziz Light
 	 */
-	private function compare_file_modification_date( $a, $b )
+	private function compare_file_modification_date($a, $b)
 	{
-		$a_modification_date = filemtime( $this->folder . $a );
-		$b_modification_date = filemtime( $this->folder . $b );
+		$a_modification_date = filemtime($this->folder . $a);
+		$b_modification_date = filemtime($this->folder . $b);
 		
-		if ( $a_modification_date == $b_modification_date )
+		if ($a_modification_date == $b_modification_date)
 			return 0;
-		return ( $a_modification_date < $b_modification_date ) ? 1: -1;
+		return ($a_modification_date < $b_modification_date) ? 1: -1;
 	} // End of private function compare_file_modification_date
 	
 // ------------------------------------------------------------------------
@@ -238,15 +256,15 @@ class Listing
 	 * @access private
 	 * @author Aziz Light
 	 */
-	private function compare_file_size( $a, $b )
+	private function compare_file_size($a, $b)
 	{
-		$a_size = sprintf( "%u", filesize( $this->folder . $a ) );
-		$b_size = sprintf( "%u", filesize( $this->folder . $b ) );
+		$a_size = sprintf("%u", filesize($this->folder . $a));
+		$b_size = sprintf("%u", filesize($this->folder . $b));
 		
-		if ( $a_size == $b_size )
+		if ($a_size == $b_size)
 			return 0;
 		
-		return ( $a_size > $b_size ) ? -1: 1;
+		return ($a_size > $b_size) ? -1: 1;
 	} // End of private function compare_file_size
 	
 } // End of class Listing

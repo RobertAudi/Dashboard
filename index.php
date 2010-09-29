@@ -2,21 +2,46 @@
 
 require_once './Dashboard/bootstrap.php';
 
-$sandboxFiles = new Listing( 'Sandbox/php' );
-$list = $sandboxFiles->getFiles(12);
+include_once '/Users/aziz/Sources/aziz/git/Foo/Foo.php';  // DEBUG <-
 
-$pics = new Listing('/Users/aziz/Music/iTunes/iTunes Music/Music/Compilations/Gilles Peterson Digs America Vol.2');
-$list2 = $pics->getFiles(3, 'size');
+$sandboxFiles = new Listing('sandbox/php');
+$list = $sandboxFiles->getFiles(8);
 
-// fo($list, '<br />SandboxFiles'); // DEBUG <-
-// fo($list2, '<br />Pics'); // DEBUG <-
+foc($list); // DEBUG <-
+?>
 
-$siteStatus = new ServerStatus( 'http://www.google.com' );
-// $siteStatus2 = new ServerStatus( 'php.net' );
+<ul>
+	<?php foreach ($list as $file): ?>
+		<li><a href="<?php echo $file['url']; ?>"><?php echo $file['filename'] ?></a> <small><?php echo $file['modification_date'] ?></small></li>
+	<?php endforeach ?>
+</ul>
 
-// foo($siteStatus->status, '$siteStatus->status'); // DEBUG <-
+<!-- ------------------------------------------------------------------------ -->
+<hr />
+<!-- ------------------------------------------------------------------------ -->
 
-// foo( $siteStatus->getTitle('http://www.google.com.lb/') );
+<?php
 
+$reader = new Logfile('php');
+// $reader = new Logfile('/Users/aziz/Sites/samples/logfile.log');
+$logs = $reader->getLogs(20);
 
-// foo( $siteStatus->check() ); // DEBUG <-
+?>
+
+<ul class="logs">
+	<?php foreach ($logs as $log): ?>
+		<!-- TODO: Remove pre and code tags and add css styling -->
+		<li><pre><code><?php echo $log; ?></code></pre></li>
+	<?php endforeach ?>
+</ul>
+
+<!-- ------------------------------------------------------------------------ -->
+<hr />
+<!-- ------------------------------------------------------------------------ -->
+
+<?php $site = new ServerStatus('http://blog.azizlight.me/', 'Aziz, Light!'); ?>
+<?php if ($site->status): ?>
+	<p><?php echo $site->title . ' is up!' ?></p>
+<?php else: ?>
+	<p><?php echo $site->title . ' is down!' ?></p>
+<?php endif ?>
