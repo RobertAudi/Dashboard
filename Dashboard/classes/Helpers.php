@@ -1,10 +1,11 @@
-<?php if ( ! defined( 'APPPATH' ) ) exit( 'Direct access to the individual scripts is not allowed!' );
+<?php if (! defined('APPPATH')) exit('Direct access to the individual scripts is not allowed!');
 
 /**
 * Helpers
 */
 class DashboardHelpers
 {
+	// Prevent the user from instantiating helpers.
 	private function __construct() {}
 	
 // ------------------------------------------------------------------------
@@ -27,52 +28,52 @@ class DashboardHelpers
 	 * @return string
 	 * @author Yamil Urbina modified by Aziz Light
 	 */
-	public static function timespan( $date = null, $old_dates_format = '\o\n F jS, Y' )
+	public static function timespan($date = null, $old_dates_format = '\o\n F jS, Y')
 	{
-		if ( empty( $date ) )
+		if (empty($date))
 			return 'just now';
-		elseif ( ! is_int( $date ) )
-			$date = strtotime( $date );
+		elseif (! is_int($date))
+			$date = strtotime($date);
 		
 		// get the time difference...
 		$time = time() - $date;
 		
 		// ...and seperate it in minutes, hours, etc.
-		$minutes = floor( $time / 60 );
-		$hours = floor( $minutes / 60 );
-		$days = floor( $hours / 24 );
-		$weeks = floor( $days / 7 );
-		$months = floor( $weeks / 4 );
+		$minutes = floor($time / 60);
+		$hours = floor($minutes / 60);
+		$days = floor($hours / 24);
+		$weeks = floor($days / 7);
+		$months = floor($weeks / 4);
 		
-		$nice_time = 'about ';
+		$nice_time = '';
 		
-		if ( $time < 60 )
+		if ($time < 60)
 		{
-				$nice_time = 'a couple seconds ago';
+				$nice_time = 'just now';
 		}
-		elseif ( $minutes < 60 )
+		elseif ($minutes < 60)
 		{
-			$nice_time .= ( $minutes == 1 ) ? 'a minute ago' : $minutes . ' minutes ago';
+			$nice_time .= ($minutes == 1) ? 'a minute ago' : $minutes . ' minutes ago';
 		}
-		elseif ( $hours < 24 )
+		elseif ($hours < 24)
 		{
-			$nice_time .= ( $hours == 1 ) ? 'an hour ago' : $hours . ' hours ago';
+			$nice_time .= ($hours == 1) ? 'an hour ago' : $hours . ' hours ago';
 		}
-		elseif ( $days < 7 )
+		elseif ($days < 7)
 		{
-			$nice_time .= ( $days ) == 1 ? '1 day ago' : $days . ' days ago';
+			$nice_time .= ($days) == 1 ? '1 day ago' : $days . ' days ago';
 		}
-		elseif ( $weeks < 5 )
+		elseif ($weeks < 5)
 		{
-			$nice_time .= ( $weeks == 1 ) ? '1 week ago' : $weeks . ' weeks ago';
+			$nice_time .= ($weeks == 1) ? '1 week ago' : $weeks . ' weeks ago';
 		}
-		elseif ( $months < 12 )
+		elseif ($months < 12)
 		{
-			$nice_time .= ( $months == 1 ) ? '1 month ago' : $months .' months ago';
+			$nice_time .= ($months == 1) ? '1 month ago' : $months .' months ago';
 		}
 		else
 		{
-			$nice_time = date( $old_dates_format, $date );
+			$nice_time = date($old_dates_format, $date);
 		}
 		
 		return $nice_time;
@@ -90,10 +91,10 @@ class DashboardHelpers
 	 * @author biolanor at googlemail dot com modified by Aziz Light
 	 * @link http://www.php.net/manual/en/function.filesize.php#98981
 	 */
-	public static function formatSize( $size )
+	public static function formatSize($size)
 	{
- 		$sizes = array( ' bytes', ' kb', ' mb', ' gb' );
-		return ( $size == 0 ) ? 'n/a' : round( $size / pow( 1024, ( $i = floor( log( $size, 1024 ) ) ) ), 2 ) . $sizes[$i];
+ 		$sizes = array(' bytes', ' kb', ' mb', ' gb');
+		return ($size == 0) ? 'n/a' : round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . $sizes[$i];
 	}
 	
 } // End of class DashboardHelpers
