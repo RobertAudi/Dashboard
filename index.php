@@ -1,18 +1,13 @@
 <?php
+require_once __DIR__ . '/Dashboard/bootstrap.php';
 
-require_once './Dashboard/bootstrap.php';
-
-include_once '/Users/aziz/Sources/aziz/git/Foo/Foo.php';  // DEBUG <-
-
-$sandboxFiles = new Listing('sandbox/php');
-$list = $sandboxFiles->getFiles(8);
-
-foc($list); // DEBUG <-
+$sandboxFiles = new Listing($_SERVER['DOCUMENT_ROOT']);
+$list = $sandboxFiles->get_files(8, array('recursive_size' => true));
 ?>
 
-<ul>
+<ul class="files">
 	<?php foreach ($list as $file): ?>
-		<li><a href="<?php echo $file['url']; ?>"><?php echo $file['filename'] ?></a> <small><?php echo $file['modification_date'] ?></small></li>
+		<li class="file"><a href="<?php echo $file['url']; ?>"><?php echo $file['filename'] ?></a> <small>(<?php echo $file['size']; ?>) <?php echo $file['modification_date'] ?></small></li>
 	<?php endforeach ?>
 </ul>
 
@@ -39,7 +34,7 @@ $logs = $reader->getLogs(20);
 <hr />
 <!-- ------------------------------------------------------------------------ -->
 
-<?php $site = new ServerStatus('http://blog.azizlight.me/', 'Aziz, Light!'); ?>
+<?php $site = new ServerStatus('http://azizlight.me/', 'Aziz, Light!'); ?>
 <?php if ($site->status): ?>
 	<p><?php echo $site->title . ' is up!' ?></p>
 <?php else: ?>
